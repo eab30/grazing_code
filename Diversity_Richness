@@ -3,89 +3,67 @@
 install.packages("googlesheets")
 library(googlesheets)
 
-setwd("C:\\Users\\eab30\\Desktop\\R Code")
-
-gs_auth(new_user=TRUE)
-
-##follow the instructions given by the prompt here, and use your web browser to get the token
-
-my.sheet <- gs_title("Data Extraction")
-my.data <- data.frame(gs_read_csv(ss=my.sheet, ws="Data", is.na(TRUE)))
-
-my.data <- gs_read(ss=my.sheet, ws="Data", is.na(TRUE), range=cell_cols(1:47))
-
-head(my.data)
-
-##WLDF 510 R script - least-squares statistical inference in meta-analysis - FE & RE models
-##example R script that uses real data from https://www.nceas.ucsb.edu/meta/publications.html#d_t_t
-##the example data is Curtis 1996, CO2 effects on plant growth https://www.nceas.ucsb.edu/meta/Curtis/Curtis_1996.pdf
-
-##required library - a new one for use, probably - metafor
+##install metafor
 install.packages("metafor")
 require(metafor)
 
-##read in co2.csv, limit to biomass ('wt') response variable
+setwd("C:\\Users\\alr569\\Desktop")
 
-dat1      <- subset(my.data,Response=="Richness")
-dat2      <- subset(my.data,Response=="Richness")
-head(dat2)
+#Authorize access to google sheets
+gs_auth(new_user=TRUE)
 
-dim(dat1) ##tell use about size of dataset
+##Download sheet from google
+my.sheet <- gs_title("Data Extraction")
+my.data <- data.frame(gs_read_csv(ss=my.sheet, ws="Data", is.na(TRUE)))
+head(my.data)
 
-##look at wt object, note data structure and similarity / differences with ours
+##Subset to ritchness data
+richness<- subset(my.data,Response=="Richness")
+head(richness)
 
-##escalc() is a key function in library metafor that calculates different measures of effect size
-##check out ?escalc for details - figure out what the response ratio means.  CO2 has a ++ effect if RR ++?  -- effect if RR ++?
-##How do you know?
-
-?escalc
+#size of dataset
+dim(richness)
 
 #Calculate SD from Var
-dat1$sd_cont
-dat1$sd_cont<-(sqrt(dat1$CntrlVar))
-head(dat1$sd_cont)
+richness$sd_cont
+richness$sd_cont<-(sqrt(richness$CntrlVar))
+head(richness$sd_cont)
 
-dat1$sd_treat
-dat1$sd_treat<-(sqrt(dat1$TrtVar))
-head(dat1$sd_treat)
+richness$sd_treat
+richness$sd_treat<-(sqrt(richness$TrtVar))
+head(richness$sd_treat)
 
 #Remove NAs
-
-dat1 <- dat1[!is.na(dat1$`n Cntrl`),]
-dat1 <- dat1[!is.na(dat1$`n Trt`),]
-
-dat1 <- dat1[!is.na(dat1$CntrlVar),]
-dat1 <- dat1[!is.na(dat1$TrtVar),]
-
-dat1 <- dat1[!is.na(dat1$CntrlMean),]
-dat1 <- dat1[!is.na(dat1$TrtMean),]
-
-nrow(dat1)
-dat1$'n Trt'
+richness <- richness[!is.na(richness$CntrlVar),]
+richness <- richness[!is.na(richness$TrtMean),]
+richness <- richness[!is.na(richness$n.Trt),]
+nrow(richness)
 
 
-ritch<-escalc(measure="SMD",m1i="CntrlMean",m2i="TrtMean",sd1i="sd_cont",sd2i="sd_treat",n1i="n Cntrl",n2i="n Trt", data=dat1,var.names=c("SMD","SMD_var"),digits=4)
-wt2<-wt2[order(wt2$GENUS),]
+#Take standared mean difference and SMD variance
+rich<-escalc(measure="SMD",m1i=TrtMean, m2i=CntrlMean,sd1i=sd_treat
+              ,sd2i=sd_cont,n1i=n.Trt,n2i=n.Cntrl, data=richness,
+              var.names=c("SMD","SMD_var"),digits=4)
 
-##a histogram of each study's log response ratio
-hist(wt2$SMD, breaks=15, xlab="hedge's d", col=2)
+##Histogram of headge's d
+hist(rich$SMD, breaks=15, xlab="hedge's d", col=2, main="Species Richness")
 abline(v=0,col=4,lty=3,lwd=5)
 
-##a forest plot - with no analysis per se - of each study's log response ratio and uncertainty
-##forest() is a powerful and flexible function in library metafor
-forest(wt2$SMD,wt2$SMD_var,slab=wt2$GENUS,pch=19)
+##Forest plot
+forest(rich$SMD,rich$SMD_var,slab=rich$Taxa,pch=19)
 
-##rma() is a powerful and flexible function that does a variety of model parameter estimation from metafor
-fixef.model <- rma(SMD, SMD_var, data=wt2, method = "FE")
+##Fixed effects model of species richness with NA omitted
+fixef.model <- rma(SMD, SMD_var, data=rich, method = "FE")
 
 summary(fixef.model)
 plot(fixef.model)
-forest(fixef.model)
+forest(fixef.model,slab=rich$Taxa)
 
 
-##rma() is a powerful and flexible function that does a variety of model parameter estimation from metafor
-ranef.model <- rma(SMD, SMD_var, data=wt2, method = "HE")
+##Random effects model of species richness with NA omitted
+ranef.model <- rma(SMD, SMD_var, data=rich, method = "HE")
 
 summary(ranef.model)
 plot(ranef.model)
-forest(ranef.model)
+forest(ranef.model,slab=rich$Taxa)
+
