@@ -60,13 +60,48 @@ forest(div$SMD,div$SMD_var,slab=div$Taxa,pch=19)
 Divfixef.model <- rma(SMD, SMD_var, data=div, method = "FE")
 
 summary(Divfixef.model)
-plot(Divfixef.model)
+plot(Divfixef.model,main="Diversity Fixed Eff")
 forest(Divfixef.model,slab=div$Taxa,main="Diversity Fixed Eff")
 
+### Fixed effects models with various moderators:
+Divfixef.model1<- rma(SMD~Taxa+PaperID,SMD_var, data=div, method = "FE")
+summary(Divfixef.model1)
+plot(Divfixef.model1)
+forest(Divfixef.model1,slab=div$Taxa,main="Diversity Fixed Eff with Taxa")
 
-##Random effects model of species diversity with NA omitted
+## with entire length
+Divfixef.model2<- rma(SMD~EntireLength,SMD_var, data=div, method = "FE")
+summary(Divfixef.model2)
+plot(Divfixef.model2)
+forest(Divfixef.model2,slab=div$Taxa,main="Diversity Fixed Eff with Entire Length")
+
+## with study length
+Divfixef.model3<- rma(SMD~StudyLength,SMD_var, data=div, method = "FE")
+summary(Divfixef.model3)
+plot(Divfixef.model3)
+forest(Divfixef.model3,slab=div$Taxa,main="Diversity Fixed Eff with Study Length")
+
+## with study year
+Divfixef.model4<- rma(SMD~StudyYear,SMD_var, data=div, method = "FE")
+summary(Divfixef.model4)
+plot(Divfixef.model4)
+forest(Divfixef.model4,slab=div$Taxa,main="Diversity Fixed Eff with Study Year")
+
+## with sample design
+Divfixef.model5<- rma(SMD~SampleDesign,SMD_var, data=div, method = "FE")
+summary(Divfixef.model5)
+plot(Divfixef.model5)
+forest(Divfixef.model5,slab=div$Taxa,main="Diversity Fixed Eff with Sample Design")
+boxplot(div$SMD~div$SampleDesign)
+
+
+##Random effects model of species diversity with NA omitted, method = ME
 Divranef.model <- rma(SMD, SMD_var, data=div, method = "HE")
+summary(Divranef.model)
+plot(Divranef.model)
+forest(Divranef.model,slab=div$Taxa,main="Diversity Random Eff")
 
+Divranef.model <- rma(SMD, SMD_var, data=div, method = "REML")
 summary(Divranef.model)
 plot(Divranef.model)
 forest(Divranef.model,slab=div$Taxa,main="Diversity Random Eff")
@@ -84,3 +119,59 @@ funnel(Divtaf,main="Diversity Trim & Fill Fixed Eff")
 
 ## Examining Effect of Grazing Regime and Agency Owner
 #not enough levels available at this time to examine this
+is.factor(div$Taxa)
+##Random Effects Models with various moderators
+##taxa and paper ID only: drops paper ID, taxa non-significant
+Divranef.model1<- rma(SMD~Taxa+PaperID,SMD_var, data=div, method = "REML")
+summary(Divranef.model1)
+plot(Divranef.model1)
+forest(Divranef.model1,slab=div$Taxa,main="Diversity Random Eff with Taxa")
+
+Divranef.model1b<- rma(SMD~Taxa,SMD_var, data=div, method = "REML")
+summary(Divranef.model1b)
+plot(Divranef.model1b)
+forest(Divranef.model1b,slab=div$Taxa,main="Diversity Random Eff with Taxa")
+
+## with entire length
+Divranef.model2<- rma(SMD~EntireLength,SMD_var, data=div, method = "REML")
+
+summary(Divranef.model2)
+plot(Divranef.model2)
+forest(Divranef.model2,slab=div$Taxa,main="Diversity Random Eff with Entire Length")
+
+## with study length
+Divranef.model3<- rma(SMD~StudyLength,SMD_var, data=div, method = "REML")
+summary(Divranef.model3)
+plot(Divranef.model3)
+forest(Divranef.model3,slab=div$Taxa,main="Diversity Random Eff with Study Length")
+
+## with study year
+Divranef.model4<- rma(SMD~StudyYear,SMD_var, data=div, method = "REML")
+summary(Divranef.model4)
+plot(Divranef.model4)
+forest(Divranef.model4,slab=div$Taxa,main="Diversity Random Eff with Study Year")
+
+## with sample design
+Divranef.model5<- rma(SMD~SampleDesign,SMD_var, data=div, method = "REML")
+summary(Divranef.model5)
+plot(Divranef.model5)
+forest(Divranef.model5,slab=div$Taxa,main="Diversity Random Eff with Sample Design")
+boxplot(rich$SMD~rich$SampleDesign)
+boxplot(rich$SMD~rich$SampleDesign)
+
+## try to specify paper ID as random effect...no success yet
+Divranef.model6<- rma(SMD~(1|as.numeric("PaperID")),SMD_var, data=div, method = "REML")
+summary(Divranef.model6)
+plot(Divranef.model6)
+forest(Divranef.model6,slab=div$Taxa,main="Diversity Random Eff of Paper ID")
+
+
+Divranef.modelfull<- rma(SMD~Taxa,SMD_var, data=div, method = "REML")
+summary(Divranef.modelfull)
+plot(Divranef.modelfull)
+forest(Divranef.modelfull,slab=div$Taxa,main="Diversity Random Eff with Taxa")
+
+Divranef.modelreduced <- rma(SMD, SMD_var, data=div, method = "REML")
+summary(Divranef.modelreduced )
+plot(Divranef.modelreduced )
+forest(Divranef.modelreduced ,slab=div$Taxa,main="Diversity Random Eff")
